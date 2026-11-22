@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tier List（6分～0分）牌組勾選與圖片匯出工具</title>
-  <!-- 引入 html2canvas 用於將完整 6分～0分 結果匯出為 PNG 圖片 -->
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <style>
     :root {
@@ -35,7 +34,6 @@
       min-height: 100vh;
     }
 
-    /* 頂部控制列 */
     .toolbar {
       width: 100%;
       max-width: 1120px;
@@ -71,14 +69,6 @@
       gap: 6px;
     }
 
-    .btn-primary {
-      background: var(--accent);
-      color: #fff;
-    }
-    .btn-primary:hover {
-      background: var(--accent-hover);
-    }
-
     .btn-success {
       background: #10b981;
       color: #fff;
@@ -95,41 +85,6 @@
       background: #4b515d;
     }
 
-    .btn-danger {
-      background: #ef4444;
-      color: #fff;
-    }
-    .btn-danger:hover {
-      background: #dc2626;
-    }
-
-    .select-wrap {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: #1f2227;
-      padding: 6px 12px;
-      border-radius: 8px;
-      border: 1px solid #3f444e;
-    }
-
-    .select-wrap label {
-      font-size: 13px;
-      color: var(--text-muted);
-    }
-
-    .select-wrap select {
-      background: #2b2e34;
-      color: #fff;
-      border: 1px solid #4b515d;
-      border-radius: 6px;
-      padding: 4px 8px;
-      font-size: 14px;
-      font-weight: 600;
-      outline: none;
-      cursor: pointer;
-    }
-
     .stats {
       font-size: 13px;
       color: var(--text-muted);
@@ -140,7 +95,6 @@
       font-size: 15px;
     }
 
-    /* 匯出畫布區域 (6分～0分 垂直堆疊) */
     .board-wrapper {
       width: 100%;
       max-width: 1120px;
@@ -158,31 +112,20 @@
       gap: 3px;
     }
 
-    /* 單一分數列 */
     .tier-row {
       display: flex;
       min-height: 112px;
       background-color: var(--bg-board);
-      transition: outline 0.12s ease;
     }
 
-    .tier-row.drag-over {
-      outline: 3px dashed #3b82f6;
-      outline-offset: -3px;
-    }
-
-    /* 左側分數標題欄 */
     .tier-sidebar {
       width: 115px;
       flex-shrink: 0;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
       padding: 12px 8px;
       border-right: 2px solid rgba(0, 0, 0, 0.08);
-      position: relative;
-      gap: 6px;
     }
 
     .tier-title {
@@ -194,28 +137,6 @@
       letter-spacing: 1px;
     }
 
-    /* 匯出時隱藏的列操作小按鈕 */
-    .row-actions {
-      display: flex;
-      gap: 4px;
-    }
-
-    .row-mini-btn {
-      font-size: 11px;
-      padding: 2px 6px;
-      border-radius: 4px;
-      border: 1px solid rgba(0, 0, 0, 0.2);
-      background: rgba(255, 255, 255, 0.65);
-      color: #1f2937;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .row-mini-btn:hover {
-      background: rgba(255, 255, 255, 0.95);
-    }
-
-    /* 右側圖示網格區 (每排 10 個) */
     .tier-grid {
       flex: 1;
       padding: 12px 14px;
@@ -225,7 +146,6 @@
       align-content: start;
     }
 
-    /* 單一 ICON 卡片 */
     .icon-card {
       position: relative;
       aspect-ratio: 1 / 1;
@@ -246,7 +166,6 @@
       pointer-events: none;
     }
 
-    /* 未點選狀態：反白 */
     .icon-card:not(.active) {
       filter: grayscale(100%) brightness(1.22) contrast(0.75);
       opacity: 0.45;
@@ -258,7 +177,6 @@
       transform: scale(1.03);
     }
 
-    /* 點選作用狀態：完整色彩 */
     .icon-card.active {
       filter: none;
       opacity: 1;
@@ -283,8 +201,6 @@
       border-radius: 8px;
     }
 
-    /* 匯出截圖專用模式：隱藏操作按鈕、空白列提示、未點選 ICON 與無已選取 ICON 的列 */
-    .exporting .row-actions,
     .exporting .empty-row-hint,
     .exporting .icon-card:not(.active),
     .exporting .tier-row.no-active-export {
@@ -306,132 +222,394 @@
 </head>
 <body>
 
-  <!-- 頂部操作工具列 -->
   <div class="toolbar">
     <div class="toolbar-group">
-      <div class="select-wrap">
-        <label for="target-tier-select">匯入目標列</label>
-        <select id="target-tier-select">
-          <option value="6分">6分</option>
-          <option value="5分">5分</option>
-          <option value="4分">4分</option>
-          <option value="3分">3分</option>
-          <option value="2分">2分</option>
-          <option value="1分">1分</option>
-          <option value="0分">0分</option>
-        </select>
-      </div>
-
-      <input type="file" id="file-input" accept="image/*" multiple style="display: none;" />
-      <button class="btn btn-primary" onclick="document.getElementById('file-input').click()">
-        📁 匯入 ICON 圖片（可多選）
-      </button>
-
       <span class="stats">已選取：<strong id="selected-count">0</strong> / <span id="total-count">0</span></span>
     </div>
 
     <div class="toolbar-group">
       <button class="btn btn-secondary" onclick="selectAll(true)">全部全彩</button>
       <button class="btn btn-secondary" onclick="selectAll(false)">全部反白</button>
-      <button class="btn btn-danger" onclick="clearAllRows()">全部清空</button>
       <button class="btn btn-success" onclick="exportAsImage()">💾 匯出已選取圖片</button>
     </div>
   </div>
 
-  <!-- 6分～0分 完整版面 -->
   <div class="board-wrapper">
     <div id="tier-board"></div>
   </div>
 
   <div class="footer-note">
-    操作說明：點擊 ICON 切換「全彩（已選取）/ 反白（未選取）」；按下「匯出已選取圖片」時，<strong>未點選的反白 ICON 與沒有已選取項目的列不會一起輸出</strong>，匯出完成後畫面會自動還原。
+    點擊 ICON 切換「全彩（已選取）/ 反白（未選取）」；按下「匯出已選取圖片」時，未點選的反白 ICON 與沒有已點選項目的列不會一起輸出。
   </div>
 
   <script>
-    const TIER_CONFIG = [
-      { label: '6分', color: '#d6c57a' },
-      { label: '5分', color: '#d9b578' },
-      { label: '4分', color: '#c8c28e' },
-      { label: '3分', color: '#a9c496' },
-      { label: '2分', color: '#9ab9c9' },
-      { label: '1分', color: '#b4a7c9' },
-      { label: '0分', color: '#c7c9ce' }
+    const TIER_DATA = [
+      {
+        label: '6分',
+        folder: '6',
+        color: '#d6c57a',
+        files: [
+          'imgi_73_REZ-Y03.jpg',
+          'imgi_74_STG-B01.jpg',
+          'imgi_75_REZ-B02.jpg',
+          'imgi_76_BLC-B03.jpg',
+          'imgi_77_REZ-G01.jpg',
+          'imgi_78_REZ-G02.jpg',
+          'imgi_79_IMC-Y02.jpg',
+          'imgi_80_KJN-Y02.jpg',
+          'imgi_81_MSS-Y01.jpg',
+          'imgi_82_MGS-Y01.jpg',
+          'imgi_83_MGS-Y02.jpg',
+          'imgi_84_MCR-Y02.jpg',
+          'imgi_85_MCR-Y03.jpg',
+          'imgi_86_ARK-Y03.jpg',
+          'imgi_87_KJ8-Y02.jpg',
+          'imgi_88_KMR-Y03.jpg',
+          'imgi_89_GIM-Y02.jpg',
+          'imgi_90_NIK-Y02.jpg',
+          'imgi_91_BLC-Y04.jpg',
+          'imgi_92_KGD-B02.jpg',
+          'imgi_93_BAC-B01.jpg',
+          'imgi_94_KMR-B02.jpg',
+          'imgi_95_GIM-B02.jpg',
+          'imgi_96_AOT-B01.jpg',
+          'imgi_97_TSK-B03.jpg',
+          'imgi_98_JJK-B01.jpg',
+          'imgi_99_IYS-P02.jpg',
+          'imgi_100_KGR-P01.jpg',
+          'imgi_101_KGR-P02.jpg',
+          'imgi_102_TKG-P01.jpg',
+          'imgi_103_EVA-P01.jpg',
+          'imgi_104_SMD-P02.jpg',
+          'imgi_105_MGS-P02.jpg',
+          'imgi_106_RNK-P01.jpg',
+          'imgi_107_MCR-P02.jpg',
+          'imgi_108_MMM-P01.jpg',
+          'imgi_109_YYH-P01.jpg',
+          'imgi_110_SAO-P01.jpg',
+          'imgi_111_BLC-P02.jpg',
+          'imgi_112_BLC-P04.jpg',
+          'imgi_113_TSK-P01.jpg',
+          'imgi_114_KMY-P03.jpg',
+          'imgi_115_OPM-G02.jpg',
+          'imgi_116_MMM-G02.jpg',
+          'imgi_117_NIK-G01.jpg',
+          'imgi_118_TSK-G02.jpg',
+          'imgi_119_TTG-R01.jpg',
+          'imgi_120_IYS-R01.jpg',
+          'imgi_121_TLR-R01.jpg',
+          'imgi_122_KIN-R02.jpg',
+          'imgi_123_MCR-R02.jpg',
+          'imgi_124_GIM-R02.jpg',
+          'imgi_125_SHY-R01.jpg'
+        ]
+      },
+      {
+        label: '5分',
+        folder: '5',
+        color: '#d9b578',
+        files: [
+          'imgi_126_IMC-Y01.jpg',
+          'imgi_127_MMM-Y01.jpg',
+          'imgi_128_BLC-G04.jpg',
+          'imgi_129_BLC-G05.jpg',
+          'imgi_130_KGD-Y01.jpg',
+          'imgi_131_TKG-Y01.jpg',
+          'imgi_132_TKG-Y02.jpg',
+          'imgi_133_TLR-Y01.jpg',
+          'imgi_134_OPM-Y01.jpg',
+          'imgi_135_KJ8-Y01.jpg',
+          'imgi_136_KMR-Y01.jpg',
+          'imgi_137_KMR-Y02.jpg',
+          'imgi_138_AOT-Y01.jpg',
+          'imgi_139_NIK-Y04.jpg',
+          'imgi_140_SYN-Y02.jpg',
+          'imgi_141_BLC-Y03.jpg',
+          'imgi_142_MHA-Y02.jpg',
+          'imgi_143_KMY-Y02.jpg',
+          'imgi_144_KGD-B01.jpg',
+          'imgi_145_ARK-B01.jpg',
+          'imgi_146_ARK-B03.jpg',
+          'imgi_147_GIM-B01.jpg',
+          'imgi_148_SHY-B01.jpg',
+          'imgi_149_AOT-B02.jpg',
+          'imgi_150_BLC-B01.jpg',
+          'imgi_151_BLC-B04.jpg',
+          'imgi_152_TSK-B01.jpg',
+          'imgi_153_CSM-P01.jpg',
+          'imgi_154_SMD-P03.jpg',
+          'imgi_155_MGS-P01.jpg',
+          'imgi_156_FMA-P01.jpg',
+          'imgi_157_BAC-P01.jpg',
+          'imgi_158_BAC-P02.jpg',
+          'imgi_159_MMM-P02.jpg',
+          'imgi_160_NIK-P02.jpg',
+          'imgi_161_BLC-P03.jpg',
+          'imgi_162_TSK-P02.jpg',
+          'imgi_163_IMS-P01.jpg',
+          'imgi_164_CGH-P02.jpg',
+          'imgi_165_JJK-P01.jpg',
+          'imgi_166_STG-G02.jpg',
+          'imgi_167_SLG-G01.jpg',
+          'imgi_168_MSS-G01.jpg',
+          'imgi_169_MSS-G02.jpg',
+          'imgi_170_WBK-G02.jpg',
+          'imgi_171_SNF-G02.jpg',
+          'imgi_172_MMM-G01.jpg',
+          'imgi_173_KJ8-G01.jpg',
+          'imgi_174_CGH-G03.jpg',
+          'imgi_175_KGD-R01.jpg',
+          'imgi_176_TKG-R02.jpg',
+          'imgi_177_EVA-R01.jpg',
+          'imgi_178_MGS-R03.jpg',
+          'imgi_179_MCR-R01.jpg',
+          'imgi_180_BAC-R02.jpg',
+          'imgi_181_KMR-R03.jpg',
+          'imgi_182_IMS-R01.jpg',
+          'imgi_183_IMS-R02.jpg'
+        ]
+      },
+      {
+        label: '4分',
+        folder: '4',
+        color: '#c8c28e',
+        files: [
+          'imgi_184_TLR-Y02.jpg',
+          'imgi_185_WBK-Y02.jpg',
+          'imgi_186_NGR-Y01.jpg',
+          'imgi_187_SAO-Y02.jpg',
+          'imgi_188_BLC-Y01.jpg',
+          'imgi_189_IMS-Y01.jpg',
+          'imgi_190_IMS-Y02.jpg',
+          'imgi_191_RNK-B01.jpg',
+          'imgi_192_RNK-B02.jpg',
+          'imgi_193_FMA-B01.jpg',
+          'imgi_194_BAC-B02.jpg',
+          'imgi_195_CGD-B02.jpg',
+          'imgi_196_NGR-B01.jpg',
+          'imgi_197_NGR-B02.jpg',
+          'imgi_198_ARK-B02.jpg',
+          'imgi_199_KMR-B01.jpg',
+          'imgi_200_SAO-B01.jpg',
+          'imgi_201_BTR-B02.jpg',
+          'imgi_202_IMS-B01.jpg',
+          'imgi_203_IMS-B02.jpg',
+          'imgi_204_IMS-B03.jpg',
+          'imgi_205_IYS-P01.jpg',
+          'imgi_206_TKG-P02.jpg',
+          'imgi_207_TKG-P03.jpg',
+          'imgi_208_SMD-P01.jpg',
+          'imgi_209_KIN-P01.jpg',
+          'imgi_210_KIN-P02.jpg',
+          'imgi_211_FMA-P02.jpg',
+          'imgi_212_ARK-P01.jpg',
+          'imgi_213_NIK-P03.jpg',
+          'imgi_214_SYN-P02.jpg',
+          'imgi_215_GNT-P01.jpg',
+          'imgi_216_TTG-G01.jpg',
+          'imgi_217_KMR-G01.jpg',
+          'imgi_218_RLY-G01.jpg',
+          'imgi_219_AOT-G01.jpg',
+          'imgi_220_YYH-G02.jpg',
+          'imgi_221_DST-G02.jpg',
+          'imgi_222_TSK-G01.jpg',
+          'imgi_223_IMC-R02.jpg',
+          'imgi_224_KGR-R02.jpg',
+          'imgi_225_MGS-R01.jpg',
+          'imgi_226_MGS-R02.jpg',
+          'imgi_227_KIN-R01.jpg',
+          'imgi_228_MCR-R03.jpg',
+          'imgi_229_BAC-R01.jpg',
+          'imgi_230_ARK-R01.jpg',
+          'imgi_231_ARK-R02.jpg',
+          'imgi_232_MMM-R01.jpg',
+          'imgi_233_KMR-R01.jpg',
+          'imgi_234_AND-R02.jpg',
+          'imgi_235_SHY-R02.jpg',
+          'imgi_236_AOT-R01.jpg',
+          'imgi_237_BCV-R01.jpg',
+          'imgi_238_YYH-R02.jpg',
+          'imgi_239_HIQ-R02.jpg'
+        ]
+      },
+      {
+        label: '3分',
+        folder: '3',
+        color: '#a9c496',
+        files: [
+          'imgi_240_NIK-G02.jpg',
+          'imgi_241_FMA-Y01.jpg',
+          'imgi_242_WBK-Y01.jpg',
+          'imgi_243_OPM-Y02.jpg',
+          'imgi_244_CGD-Y01.jpg',
+          'imgi_245_CGD-Y03.jpg',
+          'imgi_246_NGR-Y02.jpg',
+          'imgi_247_ARK-Y01.jpg',
+          'imgi_248_ARK-Y02.jpg',
+          'imgi_249_RLY-Y01.jpg',
+          'imgi_250_RLY-Y02.jpg',
+          'imgi_251_AOT-Y02.jpg',
+          'imgi_252_SAO-Y01.jpg',
+          'imgi_253_BLK-Y02.jpg',
+          'imgi_254_MHA-Y01.jpg',
+          'imgi_255_TSK-Y02.jpg',
+          'imgi_256_IMS-Y03.jpg',
+          'imgi_257_GMR-B01.jpg',
+          'imgi_258_GMR-B02.jpg',
+          'imgi_259_TKN-B01.jpg',
+          'imgi_260_BLK-B02.jpg',
+          'imgi_261_TOA-B02.jpg',
+          'imgi_262_KMY-B02.jpg',
+          'imgi_263_HTR-B02.jpg',
+          'imgi_264_BCV-P01.jpg',
+          'imgi_265_YYH-P02.jpg',
+          'imgi_266_MHA-P02.jpg',
+          'imgi_267_MHA-P03.jpg',
+          'imgi_268_MHA-P04.jpg',
+          'imgi_269_IMS-P02.jpg',
+          'imgi_270_CGH-P03.jpg',
+          'imgi_271_WBK-G01.jpg',
+          'imgi_272_SNF-G01.jpg',
+          'imgi_273_KJ8-G02.jpg',
+          'imgi_274_RLY-G02.jpg',
+          'imgi_275_RLY-G03.jpg',
+          'imgi_276_AOT-G02.jpg',
+          'imgi_277_BCV-G02.jpg',
+          'imgi_278_SAO-G02.jpg',
+          'imgi_279_BLC-G01.jpg',
+          'imgi_280_HTR-G02.jpg',
+          'imgi_281_RNK-R01.jpg',
+          'imgi_282_OPM-R01.jpg',
+          'imgi_283_SNF-R01.jpg',
+          'imgi_284_BCV-R02.jpg',
+          'imgi_285_SYN-R03.jpg',
+          'imgi_286_BLK-R02.jpg',
+          'imgi_287_MHA-R01.jpg',
+          'imgi_288_CGH-R02.jpg',
+          'imgi_289_JJK-R01.jpg'
+        ]
+      },
+      {
+        label: '2分',
+        folder: '2',
+        color: '#9ab9c9',
+        files: [
+          'imgi_290_FMA-Y02.jpg',
+          'imgi_291_HIQ-Y01.jpg',
+          'imgi_292_NIK-Y01.jpg',
+          'imgi_293_TRK-Y02.jpg',
+          'imgi_294_DST-Y01.jpg',
+          'imgi_295_BLC-Y02.jpg',
+          'imgi_296_BLK-Y01.jpg',
+          'imgi_297_GNT-Y01.jpg',
+          'imgi_298_BTR-Y02.jpg',
+          'imgi_299_TSK-Y01.jpg',
+          'imgi_300_KMY-Y01.jpg',
+          'imgi_301_HTR-Y02.jpg',
+          'imgi_302_JJK-Y01.jpg',
+          'imgi_303_JJK-Y02.jpg',
+          'imgi_304_FMA-B02.jpg',
+          'imgi_305_KMR-B03.jpg',
+          'imgi_306_SHY-B02.jpg',
+          'imgi_307_GMR-B03.jpg',
+          'imgi_308_SAO-B03.jpg',
+          'imgi_309_TKN-B02.jpg',
+          'imgi_310_CGH-B01.jpg',
+          'imgi_311_HTR-B01.jpg',
+          'imgi_312_JJK-B02.jpg',
+          'imgi_313_KGR-P03.jpg',
+          'imgi_314_AND-P01.jpg',
+          'imgi_315_AND-P02.jpg',
+          'imgi_316_BCV-P02.jpg',
+          'imgi_317_TRK-P02.jpg',
+          'imgi_318_DST-P01.jpg',
+          'imgi_319_KMY-P01.jpg',
+          'imgi_320_HTR-P02.jpg',
+          'imgi_321_JJK-P02.jpg',
+          'imgi_322_OPM-G01.jpg',
+          'imgi_323_AOT-G03.jpg',
+          'imgi_324_GMR-G03.jpg',
+          'imgi_325_BCV-G01.jpg',
+          'imgi_326_YYH-G03.jpg',
+          'imgi_327_MHA-G01.jpg',
+          'imgi_328_MHA-G02.jpg',
+          'imgi_329_OPM-R02.jpg',
+          'imgi_330_SNF-R02.jpg',
+          'imgi_331_AND-R01.jpg',
+          'imgi_332_YYH-R01.jpg',
+          'imgi_333_SYN-R01.jpg',
+          'imgi_334_TKN-R01.jpg',
+          'imgi_335_MHA-R02.jpg',
+          'imgi_336_TOA-R01.jpg',
+          'imgi_337_KMY-R01.jpg',
+          'imgi_338_KMY-R02.jpg',
+          'imgi_339_KMY-R03.jpg',
+          'imgi_340_CGH-R01.jpg'
+        ]
+      },
+      {
+        label: '1分',
+        folder: '1',
+        color: '#b4a7c9',
+        files: [
+          'imgi_341_HIQ-Y02.jpg',
+          'imgi_342_SYN-Y01.jpg',
+          'imgi_343_TRK-Y01.jpg',
+          'imgi_344_DST-Y02.jpg',
+          'imgi_345_GNT-Y02.jpg',
+          'imgi_346_BTR-Y03.jpg',
+          'imgi_347_HTR-Y01.jpg',
+          'imgi_348_JJK-Y03.jpg',
+          'imgi_349_HIQ-B01.jpg',
+          'imgi_350_TRK-B01.jpg',
+          'imgi_351_TRK-B02.jpg',
+          'imgi_352_BLK-B01.jpg',
+          'imgi_353_TOA-B01.jpg',
+          'imgi_354_KMY-B01.jpg',
+          'imgi_355_KMY-B03.jpg',
+          'imgi_356_CGH-B02.jpg',
+          'imgi_357_SYN-P01.jpg',
+          'imgi_358_TRK-P01.jpg',
+          'imgi_359_DST-P02.jpg',
+          'imgi_360_TKN-P01.jpg',
+          'imgi_361_TKN-P02.jpg',
+          'imgi_362_GNT-P02.jpg',
+          'imgi_363_CGH-P01.jpg',
+          'imgi_364_HTR-P01.jpg',
+          'imgi_365_GMR-G01.jpg',
+          'imgi_366_GMR-G02.jpg',
+          'imgi_367_BTR-G01.jpg',
+          'imgi_368_TOA-G01.jpg',
+          'imgi_369_TOA-G02.jpg',
+          'imgi_370_CGH-G01.jpg',
+          'imgi_371_CGH-G02.jpg',
+          'imgi_372_HTR-G01.jpg',
+          'imgi_373_TKN-R02.jpg',
+          'imgi_374_BLK-R01.jpg',
+          'imgi_375_GNT-R01.jpg',
+          'imgi_376_GNT-R02.jpg',
+          'imgi_377_MHA-R03.jpg',
+          'imgi_378_JJK-R02.jpg'
+        ]
+      },
+      {
+        label: '0分',
+        folder: '0',
+        color: '#c7c9ce',
+        files: [
+          'imgi_379_BTR-Y01.jpg',
+          'imgi_380_HIQ-B02.jpg',
+          'imgi_381_BTR-B01.jpg',
+          'imgi_382_DST-G01.jpg',
+          'imgi_383_BTR-G02.jpg',
+          'imgi_384_HIQ-R01.jpg',
+          'imgi_385_TOA-R02.jpg',
+          'imgi_386_JJK-R03.jpg'
+        ]
+      }
     ];
 
     const tierBoard = document.getElementById('tier-board');
-    const fileInput = document.getElementById('file-input');
-    const targetTierSelect = document.getElementById('target-tier-select');
-    let activeImportTier = '6分';
-
-    function initBoard() {
-      TIER_CONFIG.forEach(({ label, color }) => {
-        const row = document.createElement('div');
-        row.className = 'tier-row';
-        row.dataset.tier = label;
-
-        const sidebar = document.createElement('div');
-        sidebar.className = 'tier-sidebar';
-        sidebar.style.backgroundColor = color;
-
-        const title = document.createElement('div');
-        title.className = 'tier-title';
-        title.textContent = label;
-
-        const actions = document.createElement('div');
-        actions.className = 'row-actions';
-
-        const addBtn = document.createElement('button');
-        addBtn.className = 'row-mini-btn';
-        addBtn.textContent = '＋匯入';
-        addBtn.title = `匯入圖片至 ${label}`;
-        addBtn.onclick = () => {
-          activeImportTier = label;
-          targetTierSelect.value = label;
-          fileInput.click();
-        };
-
-        const clearBtn = document.createElement('button');
-        clearBtn.className = 'row-mini-btn';
-        clearBtn.textContent = '清空';
-        clearBtn.title = `清空 ${label} 圖片`;
-        clearBtn.onclick = () => clearRow(label);
-
-        actions.appendChild(addBtn);
-        actions.appendChild(clearBtn);
-        sidebar.appendChild(title);
-        sidebar.appendChild(actions);
-
-        const grid = document.createElement('div');
-        grid.className = 'tier-grid';
-        grid.id = `grid-${label}`;
-
-        const hint = document.createElement('div');
-        hint.className = 'empty-row-hint';
-        hint.textContent = `將圖片拖曳至此，或使用上方「匯入 ICON 圖片」加入 ${label}`;
-        grid.appendChild(hint);
-
-        row.addEventListener('dragover', (e) => {
-          e.preventDefault();
-          row.classList.add('drag-over');
-        });
-
-        row.addEventListener('dragleave', () => {
-          row.classList.remove('drag-over');
-        });
-
-        row.addEventListener('drop', (e) => {
-          e.preventDefault();
-          row.classList.remove('drag-over');
-          handleFiles(e.dataTransfer.files, label);
-        });
-
-        row.appendChild(sidebar);
-        row.appendChild(grid);
-        tierBoard.appendChild(row);
-      });
-
-      updateCounts();
-    }
 
     function updateCounts() {
       const cards = tierBoard.querySelectorAll('.icon-card');
@@ -448,27 +626,39 @@
       });
     }
 
-    function handleFiles(files, tierLabel) {
-      if (!files || files.length === 0) return;
-      const grid = document.getElementById(`grid-${tierLabel}`);
-      if (!grid) return;
+    function initBoard() {
+      TIER_DATA.forEach(({ label, folder, color, files }) => {
+        const row = document.createElement('div');
+        row.className = 'tier-row';
+        row.dataset.tier = label;
 
-      const sortedFiles = Array.from(files).sort((a, b) =>
-        a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })
-      );
+        const sidebar = document.createElement('div');
+        sidebar.className = 'tier-sidebar';
+        sidebar.style.backgroundColor = color;
 
-      sortedFiles.forEach(file => {
-        if (!file.type.startsWith('image/')) return;
+        const title = document.createElement('div');
+        title.className = 'tier-title';
+        title.textContent = label;
+        sidebar.appendChild(title);
 
-        const reader = new FileReader();
-        reader.onload = (e) => {
+        const grid = document.createElement('div');
+        grid.className = 'tier-grid';
+        grid.id = `grid-${folder}`;
+
+        const hint = document.createElement('div');
+        hint.className = 'empty-row-hint';
+        hint.textContent = `尚無 ${label} 圖片`;
+        grid.appendChild(hint);
+
+        files.forEach(fileName => {
           const card = document.createElement('div');
           card.className = 'icon-card';
-          card.title = `${tierLabel} - ${file.name}`;
+          card.title = `${label} - ${fileName}`;
 
           const img = document.createElement('img');
-          img.src = e.target.result;
-          img.alt = file.name;
+          img.src = `images/${folder}/${fileName}`;
+          img.alt = fileName;
+          img.crossOrigin = 'anonymous';
 
           card.appendChild(img);
           card.addEventListener('click', () => {
@@ -477,28 +667,13 @@
           });
 
           grid.appendChild(card);
-          updateCounts();
-        };
-        reader.readAsDataURL(file);
+        });
+
+        row.appendChild(sidebar);
+        row.appendChild(grid);
+        tierBoard.appendChild(row);
       });
-    }
 
-    fileInput.addEventListener('change', (e) => {
-      const targetTier = activeImportTier || targetTierSelect.value;
-      handleFiles(e.target.files, targetTier);
-      fileInput.value = '';
-      activeImportTier = null;
-    });
-
-    function clearRow(tierLabel) {
-      const grid = document.getElementById(`grid-${tierLabel}`);
-      if (!grid) return;
-      grid.querySelectorAll('.icon-card').forEach(card => card.remove());
-      updateCounts();
-    }
-
-    function clearAllRows() {
-      tierBoard.querySelectorAll('.icon-card').forEach(card => card.remove());
       updateCounts();
     }
 
@@ -516,7 +691,6 @@
         return;
       }
 
-      // 標記沒有任何已點選 ICON 的列，匯出時一併隱藏
       const rows = tierBoard.querySelectorAll('.tier-row');
       rows.forEach(row => {
         const hasActive = row.querySelectorAll('.icon-card.active').length > 0;
@@ -532,7 +706,7 @@
         });
 
         const link = document.createElement('a');
-        link.download = `UnionArena_TierList_已選取結果.png`;
+        link.download = `Hifumi_TierList_已選取結果.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
       } finally {
