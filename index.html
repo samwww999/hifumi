@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tier List（6分～0分）牌組勾選與圖片匯出工具</title>
+  <!-- 引入 html2canvas 用於將完整 6分～0分 結果匯出為 PNG 圖片 -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <style>
+    :root {
+      --bg-page: #1e2024;
+      --bg-panel: #2b2e34;
+      --bg-board: #e2e4e8;
+      --tier-text: #2c2818;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    /* 頂部控制列 */
+    .toolbar {
+      width: 100%;
+      max-width: 1120px;
+      background: var(--bg-panel);
+      padding: 16px 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    }
+
+    .toolbar-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn {
+      padding: 9px 15px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-primary:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-success {
+      background: #10b981;
+      color: #fff;
+    }
+    .btn-success:hover {
+      background: #059669;
+    }
+
+    .btn-secondary {
+      background: #3f444e;
+      color: #e5e7eb;
+    }
+    .btn-secondary:hover {
+      background: #4b515d;
+    }
+
+    .btn-danger {
+      background: #ef4444;
+      color: #fff;
+    }
+    .btn-danger:hover {
+      background: #dc2626;
+    }
+
+    .select-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #1f2227;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid #3f444e;
+    }
+
+    .select-wrap label {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .select-wrap select {
+      background: #2b2e34;
+      color: #fff;
+      border: 1px solid #4b515d;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 14px;
+      font-weight: 600;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .stats {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-left: 4px;
+    }
+    .stats strong {
+      color: #60a5fa;
+      font-size: 15px;
+    }
+
+    /* 匯出畫布區域 (6分～0分 垂直堆疊) */
+    .board-wrapper {
+      width: 100%;
+      max-width: 1120px;
+      overflow-x: auto;
+    }
+
+    #tier-board {
+      display: flex;
+      flex-direction: column;
+      width: 1080px;
+      background-color: #c8cdd5;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+      gap: 3px;
+    }
+
+    /* 單一分數列 */
+    .tier-row {
+      display: flex;
+      min-height: 112px;
+      background-color: var(--bg-board);
+      transition: outline 0.12s ease;
+    }
+
+    .tier-row.drag-over {
+      outline: 3px dashed #3b82f6;
+      outline-offset: -3px;
+    }
+
+    /* 左側分數標題欄 */
+    .tier-sidebar {
+      width: 115px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 8px;
+      border-right: 2px solid rgba(0, 0, 0, 0.08);
+      position: relative;
+      gap: 6px;
+    }
+
+    .tier-title {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--tier-text);
+      text-align: center;
+      line-height: 1.2;
+      letter-spacing: 1px;
+    }
+
+    /* 匯出時隱藏的列操作小按鈕 */
+    .row-actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    .row-mini-btn {
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid rgba(0, 0, 0, 0.2);
+      background: rgba(255, 255, 255, 0.65);
+      color: #1f2937;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .row-mini-btn:hover {
+      background: rgba(255, 255, 255, 0.95);
+    }
+
+    /* 右側圖示網格區 (每排 10 個) */
+    .tier-grid {
+      flex: 1;
+      padding: 12px 14px;
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 10px;
+      align-content: start;
+    }
+
+    /* 單一 ICON 卡片 */
+    .icon-card {
+      position: relative;
+      aspect-ratio: 1 / 1;
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      background: #cfd4dc;
+      border: 2.5px solid #b8bec8;
+      transition: transform 0.14s ease, filter 0.18s ease, opacity 0.18s ease, box-shadow 0.14s ease;
+      user-select: none;
+    }
+
+    .icon-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      pointer-events: none;
+    }
+
+    /* 未點選狀態：反白 */
+    .icon-card:not(.active) {
+      filter: grayscale(100%) brightness(1.22) contrast(0.75);
+      opacity: 0.45;
+      border-color: #c5cad3;
+    }
+
+    .icon-card:not(.active):hover {
+      opacity: 0.72;
+      transform: scale(1.03);
+    }
+
+    /* 點選作用狀態：完整色彩 */
+    .icon-card.active {
+      filter: none;
+      opacity: 1;
+      border-color: #ffffff;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.28);
+      transform: scale(1.02);
+    }
+
+    .icon-card.active:hover {
+      transform: scale(1.05);
+    }
+
+    .empty-row-hint {
+      grid-column: 1 / -1;
+      height: 84px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #7b8290;
+      font-size: 13px;
+      border: 1.5px dashed #c2c7d0;
+      border-radius: 8px;
+    }
+
+    /* 匯出截圖專用模式：隱藏操作按鈕、空白列提示、未點選 ICON 與無已選取 ICON 的列 */
+    .exporting .row-actions,
+    .exporting .empty-row-hint,
+    .exporting .icon-card:not(.active),
+    .exporting .tier-row.no-active-export {
+      display: none !important;
+    }
+
+    .exporting .tier-row {
+      min-height: 92px;
+    }
+
+    .footer-note {
+      margin-top: 14px;
+      font-size: 13px;
+      color: var(--text-muted);
+      text-align: center;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 頂部操作工具列 -->
+  <div class="toolbar">
+    <div class="toolbar-group">
+      <div class="select-wrap">
+        <label for="target-tier-select">匯入目標列</label>
+        <select id="target-tier-select">
+          <option value="6分">6分</option>
+          <option value="5分">5分</option>
+          <option value="4分">4分</option>
+          <option value="3分">3分</option>
+          <option value="2分">2分</option>
+          <option value="1分">1分</option>
+          <option value="0分">0分</option>
+        </select>
+      </div>
+
+      <input type="file" id="file-input" accept="image/*" multiple style="display: none;" />
+      <button class="btn btn-primary" onclick="document.getElementById('file-input').click()">
+        📁 匯入 ICON 圖片（可多選）
+      </button>
+
+      <span class="stats">已選取：<strong id="selected-count">0</strong> / <span id="total-count">0</span></span>
+    </div>
+
+    <div class="toolbar-group">
+      <button class="btn btn-secondary" onclick="selectAll(true)">全部全彩</button>
+      <button class="btn btn-secondary" onclick="selectAll(false)">全部反白</button>
+      <button class="btn btn-danger" onclick="clearAllRows()">全部清空</button>
+      <button class="btn btn-success" onclick="exportAsImage()">💾 匯出已選取圖片</button>
+    </div>
+  </div>
+
+  <!-- 6分～0分 完整版面 -->
+  <div class="board-wrapper">
+    <div id="tier-board"></div>
+  </div>
+
+  <div class="footer-note">
+    操作說明：點擊 ICON 切換「全彩（已選取）/ 反白（未選取）」；按下「匯出已選取圖片」時，<strong>未點選的反白 ICON 與沒有已選取項目的列不會一起輸出</strong>，匯出完成後畫面會自動還原。
+  </div>
+
+  <script>
+    const TIER_CONFIG = [
+      { label: '6分', color: '#d6c57a' },
+      { label: '5分', color: '#d9b578' },
+      { label: '4分', color: '#c8c28e' },
+      { label: '3分', color: '#a9c496' },
+      { label: '2分', color: '#9ab9c9' },
+      { label: '1分', color: '#b4a7c9' },
+      { label: '0分', color: '#c7c9ce' }
+    ];
+
+    const tierBoard = document.getElementById('tier-board');
+    const fileInput = document.getElementById('file-input');
+    const targetTierSelect = document.getElementById('target-tier-select');
+    let activeImportTier = '6分';
+
+    function initBoard() {
+      TIER_CONFIG.forEach(({ label, color }) => {
+        const row = document.createElement('div');
+        row.className = 'tier-row';
+        row.dataset.tier = label;
+
+        const sidebar = document.createElement('div');
+        sidebar.className = 'tier-sidebar';
+        sidebar.style.backgroundColor = color;
+
+        const title = document.createElement('div');
+        title.className = 'tier-title';
+        title.textContent = label;
+
+        const actions = document.createElement('div');
+        actions.className = 'row-actions';
+
+        const addBtn = document.createElement('button');
+        addBtn.className = 'row-mini-btn';
+        addBtn.textContent = '＋匯入';
+        addBtn.title = `匯入圖片至 ${label}`;
+        addBtn.onclick = () => {
+          activeImportTier = label;
+          targetTierSelect.value = label;
+          fileInput.click();
+        };
+
+        const clearBtn = document.createElement('button');
+        clearBtn.className = 'row-mini-btn';
+        clearBtn.textContent = '清空';
+        clearBtn.title = `清空 ${label} 圖片`;
+        clearBtn.onclick = () => clearRow(label);
+
+        actions.appendChild(addBtn);
+        actions.appendChild(clearBtn);
+        sidebar.appendChild(title);
+        sidebar.appendChild(actions);
+
+        const grid = document.createElement('div');
+        grid.className = 'tier-grid';
+        grid.id = `grid-${label}`;
+
+        const hint = document.createElement('div');
+        hint.className = 'empty-row-hint';
+        hint.textContent = `將圖片拖曳至此，或使用上方「匯入 ICON 圖片」加入 ${label}`;
+        grid.appendChild(hint);
+
+        row.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          row.classList.add('drag-over');
+        });
+
+        row.addEventListener('dragleave', () => {
+          row.classList.remove('drag-over');
+        });
+
+        row.addEventListener('drop', (e) => {
+          e.preventDefault();
+          row.classList.remove('drag-over');
+          handleFiles(e.dataTransfer.files, label);
+        });
+
+        row.appendChild(sidebar);
+        row.appendChild(grid);
+        tierBoard.appendChild(row);
+      });
+
+      updateCounts();
+    }
+
+    function updateCounts() {
+      const cards = tierBoard.querySelectorAll('.icon-card');
+      const activeCards = tierBoard.querySelectorAll('.icon-card.active');
+      document.getElementById('total-count').textContent = cards.length;
+      document.getElementById('selected-count').textContent = activeCards.length;
+
+      tierBoard.querySelectorAll('.tier-row').forEach(row => {
+        const rowCards = row.querySelectorAll('.icon-card');
+        const hint = row.querySelector('.empty-row-hint');
+        if (hint) {
+          hint.style.display = rowCards.length === 0 ? 'flex' : 'none';
+        }
+      });
+    }
+
+    function handleFiles(files, tierLabel) {
+      if (!files || files.length === 0) return;
+      const grid = document.getElementById(`grid-${tierLabel}`);
+      if (!grid) return;
+
+      const sortedFiles = Array.from(files).sort((a, b) =>
+        a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })
+      );
+
+      sortedFiles.forEach(file => {
+        if (!file.type.startsWith('image/')) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const card = document.createElement('div');
+          card.className = 'icon-card';
+          card.title = `${tierLabel} - ${file.name}`;
+
+          const img = document.createElement('img');
+          img.src = e.target.result;
+          img.alt = file.name;
+
+          card.appendChild(img);
+          card.addEventListener('click', () => {
+            card.classList.toggle('active');
+            updateCounts();
+          });
+
+          grid.appendChild(card);
+          updateCounts();
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    fileInput.addEventListener('change', (e) => {
+      const targetTier = activeImportTier || targetTierSelect.value;
+      handleFiles(e.target.files, targetTier);
+      fileInput.value = '';
+      activeImportTier = null;
+    });
+
+    function clearRow(tierLabel) {
+      const grid = document.getElementById(`grid-${tierLabel}`);
+      if (!grid) return;
+      grid.querySelectorAll('.icon-card').forEach(card => card.remove());
+      updateCounts();
+    }
+
+    function clearAllRows() {
+      tierBoard.querySelectorAll('.icon-card').forEach(card => card.remove());
+      updateCounts();
+    }
+
+    function selectAll(isActive) {
+      tierBoard.querySelectorAll('.icon-card').forEach(card => {
+        card.classList.toggle('active', isActive);
+      });
+      updateCounts();
+    }
+
+    async function exportAsImage() {
+      const activeCards = tierBoard.querySelectorAll('.icon-card.active');
+      if (activeCards.length === 0) {
+        alert('目前沒有已點選的 ICON，請先點選至少一張圖片再匯出！');
+        return;
+      }
+
+      // 標記沒有任何已點選 ICON 的列，匯出時一併隱藏
+      const rows = tierBoard.querySelectorAll('.tier-row');
+      rows.forEach(row => {
+        const hasActive = row.querySelectorAll('.icon-card.active').length > 0;
+        row.classList.toggle('no-active-export', !hasActive);
+      });
+
+      tierBoard.classList.add('exporting');
+      try {
+        const canvas = await html2canvas(tierBoard, {
+          scale: 2,
+          backgroundColor: null,
+          useCORS: true
+        });
+
+        const link = document.createElement('a');
+        link.download = `UnionArena_TierList_已選取結果.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      } finally {
+        tierBoard.classList.remove('exporting');
+        rows.forEach(row => row.classList.remove('no-active-export'));
+      }
+    }
+
+    initBoard();
+  </script>
+</body>
+</html>
