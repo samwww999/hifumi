@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tier List（6分～0分）牌組勾選與圖片匯出工具</title>
+  <title>Tier List（10分～0分）牌組勾選與圖片匯出工具</title>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <style>
     :root {
@@ -218,6 +218,29 @@
       text-align: center;
       line-height: 1.6;
     }
+
+    .site-disclaimer {
+      width: 100%;
+      max-width: 1120px;
+      margin-top: 16px;
+      padding: 14px 18px;
+      background: var(--bg-panel);
+      border-radius: 10px;
+      font-size: 13px;
+      color: var(--text-muted);
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .site-disclaimer a {
+      color: #60a5fa;
+      text-decoration: underline;
+      word-break: break-all;
+    }
+
+    .site-disclaimer a:hover {
+      color: #93c5fd;
+    }
   </style>
 </head>
 <body>
@@ -242,8 +265,106 @@
     點擊 ICON 切換「全彩（已選取）/ 反白（未選取）」；按下「匯出已選取圖片」時，未點選的反白 ICON 與沒有已點選項目的列不會一起輸出。
   </div>
 
+  <footer class="site-disclaimer">
+    此表製作參考水鬼團特殊賽分數表（<a href="https://mizuoni.blogspot.com/p/union-arena-tier-list.html" target="_blank" rel="noopener noreferrer">https://mizuoni.blogspot.com/p/union-arena-tier-list.html</a>）
+  </footer>
+
   <script>
     const TIER_DATA = [
+      {
+        label: '10分',
+        folder: '10',
+        color: '#e5b869',
+        files: [
+          'imgi_1_TTG-R02.jpg'
+        ]
+      },
+      {
+        label: '9分',
+        folder: '9',
+        color: '#e0be6e',
+        files: [
+          'imgi_6_MST-G01.jpg',
+          'imgi_2_SMD-Y01.jpg',
+          'imgi_3_EVA-P03.jpg',
+          'imgi_4_ARK-P02.jpg',
+          'imgi_5_IMS-P03.jpg'
+        ]
+      },
+      {
+        label: '8分',
+        folder: '8',
+        color: '#dbc373',
+        files: [
+         'imgi_20_EVA-R02.jpg',
+         'imgi_7_REZ-B01.jpg',
+         'imgi_8_BLC-P05.jpg',
+         'imgi_9_EVA-Y01.jpg',
+         'imgi_10_NIK-Y03.jpg',
+         'imgi_11_STG-B02.jpg',
+         'imgi_12_MCR-B01.jpg',
+         'imgi_13_CGD-B01.jpg',
+         'imgi_14_KJN-P02.jpg',
+         'imgi_15_SLG-P02.jpg',
+         'imgi_16_EVA-P02.jpg',
+         'imgi_17_KMR-G02.jpg',
+         'imgi_18_CSM-R02.jpg',
+         'imgi_19_KGD-R02.jpg'
+        ]
+      },
+      {
+        label: '7分',
+        folder: '7',
+        color: '#d8c476',
+        files: [
+          'imgi_32_MMM-Y02.jpg',
+          'imgi_33_GIM-Y01.jpg',
+          'imgi_34_IMC-B01.jpg',
+          'imgi_35_IMC-B02.jpg',
+          'imgi_36_MST-B01.jpg',
+          'imgi_37_MST-B02.jpg',
+          'imgi_38_MCR-B02.jpg',
+          'imgi_39_BLC-B02.jpg',
+          'imgi_40_CSM-P02.jpg',
+          'imgi_41_KJN-P01.jpg',
+          'imgi_42_SLG-P01.jpg',
+          'imgi_43_RNK-P02.jpg',
+          'imgi_44_MCR-P01.jpg',
+          'imgi_45_NIK-P01.jpg',
+          'imgi_46_SAO-P02.jpg',
+          'imgi_47_BLC-P01.jpg',
+          'imgi_48_STG-G01.jpg',
+          'imgi_49_TTG-G02.jpg',
+          'imgi_50_MST-G02.jpg',
+          'imgi_57_SLG-G02.jpg',
+          'imgi_58_SLG-G03.jpg',
+          'imgi_59_SAO-G01.jpg',
+          'imgi_60_BLC-G02.jpg',
+          'imgi_61_IMC-R01.jpg',
+          'imgi_62_IMC-R03.jpg',
+          'imgi_63_IYS-R02.jpg',
+          'imgi_64_CSM-R01.jpg',
+          'imgi_65_KGR-R01.jpg',
+          'imgi_66_TKG-R01.jpg',
+          'imgi_67_TLR-R02.jpg',
+          'imgi_68_RNK-R02.jpg',
+          'imgi_69_MMM-R02.jpg',
+          'imgi_70_KMR-R02.jpg',
+          'imgi_71_GIM-R01.jpg',
+          'imgi_72_AOT-R02.jpg',
+          'imgi_21_REZ-Y01.jpg',
+          'imgi_22_REZ-P01.jpg',
+          'imgi_23_REZ-P02.jpg',
+          'imgi_24_REZ-G03.jpg',
+          'imgi_25_KJN-Y01.jpg',
+          'imgi_26_MSS-Y02.jpg',
+          'imgi_27_KGD-Y02.jpg',
+          'imgi_28_SMD-Y02.jpg',
+          'imgi_29_REZ-Y02.jpg',
+          'imgi_30_MCR-Y01.jpg',
+          'imgi_31_CGD-Y02.jpg'
+        ]
+      },
       {
         label: '6分',
         folder: '6',
@@ -683,7 +804,7 @@
       });
       updateCounts();
     }
-    
+
     function isIOSDevice() {
       return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -694,6 +815,29 @@
         canvas.toBlob((blob) => resolve(blob), type);
       });
     }
+
+    async function saveImageOnIOS(blob, fileName) {
+      const file = new File([blob], fileName, { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: fileName
+          });
+          return;
+        } catch (err) {
+          if (err && err.name === 'AbortError') return;
+        }
+      }
+
+      const blobUrl = URL.createObjectURL(blob);
+      const previewWin = window.open(blobUrl, '_blank');
+      if (!previewWin) {
+        alert('請允許彈出視窗，或改用系統分享儲存圖片。');
+      }
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+    }
+
     async function exportAsImage() {
       const activeCards = tierBoard.querySelectorAll('.icon-card.active');
       if (activeCards.length === 0) {
@@ -715,7 +859,7 @@
           useCORS: true
         });
 
-        const fileName = `UA_TierList_分數表.png`;
+        const fileName = `UA_TierList_特殊賽分數表.png`;
         const blob = await canvasToBlob(canvas, 'image/png');
 
         if (!blob) {
@@ -723,33 +867,11 @@
           return;
         }
 
-        // iOS 優先呼叫系統分享面板（可直接選「儲存影像」存入照片圖庫）
         if (isIOSDevice()) {
-          const file = new File([blob], fileName, { type: 'image/png' });
-          if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            try {
-              await navigator.share({
-                files: [file],
-                title: fileName
-              });
-              return;
-            } catch (err) {
-              // 使用者取消分享時不跳錯誤；其他情況則走下方開新分頁備援
-              if (err && err.name === 'AbortError') return;
-            }
-          }
-
-          // 備援方案：在新分頁開啟圖片，讓使用者長按圖片「加入照片」
-          const blobUrl = URL.createObjectURL(blob);
-          const previewWin = window.open(blobUrl, '_blank');
-          if (!previewWin) {
-            alert('請允許彈出視窗，或改用系統分享儲存圖片。');
-          }
-          setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+          await saveImageOnIOS(blob, fileName);
           return;
         }
 
-        // 桌機 / Android 維持直接下載 PNG
         const blobUrl = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.download = fileName;
