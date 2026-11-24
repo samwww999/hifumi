@@ -167,18 +167,19 @@
     }
 
     .icon-card:not(.active) {
-      filter: grayscale(100%) brightness(1.22) contrast(0.75);
-      opacity: 0.45;
+      filter: saturate(30%);
+      opacity: 0.85;
       border-color: #c5cad3;
     }
 
     .icon-card:not(.active):hover {
-      opacity: 0.72;
+      filter: saturate(55%);
+      opacity: 0.95;
       transform: scale(1.03);
     }
 
     .icon-card.active {
-      filter: none;
+      filter: saturate(100%);
       opacity: 1;
       border-color: #ffffff;
       box-shadow: 0 3px 10px rgba(0, 0, 0, 0.28);
