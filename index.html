@@ -160,7 +160,7 @@
 
     .tier-row {
       display: flex;
-      min-height: 112px;
+      min-height: 116px;
       background-color: var(--bg-board);
     }
 
@@ -185,18 +185,18 @@
 
     .tier-grid {
       flex: 1;
-      padding: 12px 14px;
+      padding: 14px 16px;
       display: grid;
       grid-template-columns: repeat(10, 1fr);
-      gap: 10px;
+      gap: 12px;
       align-content: start;
     }
 
+    /* 不裁切 overflow，讓邊緣 mark 顯示在 ICON 外框邊緣 */
     .icon-card {
       position: relative;
       aspect-ratio: 1 / 1;
       border-radius: 12px;
-      overflow: hidden;
       cursor: pointer;
       background: #cfd4dc;
       border: 2.5px solid #b8bec8;
@@ -209,6 +209,7 @@
       height: 100%;
       object-fit: cover;
       display: block;
+      border-radius: 9.5px;
       pointer-events: none;
     }
 
@@ -238,35 +239,35 @@
       transform: scale(1.05);
     }
 
-    /* 角落 Mark（左上星星：擅長牌組 / 右上愛心：喜歡牌組） */
+    /* 外框邊緣 Mark（左上星星：擅長牌組 / 右上愛心：喜歡牌組） */
     .card-mark {
       position: absolute;
-      top: 4px;
-      width: 24px;
-      height: 24px;
+      top: -7px;
+      width: 23px;
+      height: 23px;
       border-radius: 50%;
       display: none;
       align-items: center;
       justify-content: center;
-      font-size: 13px;
+      font-size: 12px;
       line-height: 1;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
       pointer-events: none;
-      z-index: 2;
+      z-index: 3;
     }
 
     .mark-star {
-      left: 4px;
-      background: rgba(245, 158, 11, 0.95);
+      left: -7px;
+      background: #f59e0b;
       color: #fffbeb;
-      border: 1.5px solid #ffffff;
+      border: 2px solid #ffffff;
     }
 
     .mark-heart {
-      right: 4px;
-      background: rgba(236, 72, 153, 0.95);
+      right: -7px;
+      background: #ec4899;
       color: #fdf2f8;
-      border: 1.5px solid #ffffff;
+      border: 2px solid #ffffff;
     }
 
     .icon-card.has-star .mark-star {
@@ -296,7 +297,7 @@
     }
 
     .exporting .tier-row {
-      min-height: 92px;
+      min-height: 96px;
     }
 
     .footer-note {
@@ -338,11 +339,11 @@
       <span class="stats">已選取：<strong id="selected-count">0</strong> / <span id="total-count">0</span></span>
 
       <div class="mode-checks">
-        <label class="mode-check" id="label-mode-star" title="勾選後點擊牌組，在左上角加上星星 mark（擅長牌組）">
+        <label class="mode-check" id="label-mode-star" title="勾選後點擊牌組，在左上外框邊緣加上星星 mark（擅長牌組）">
           <input type="checkbox" id="mode-star" />
           <span>★ 擅長牌組</span>
         </label>
-        <label class="mode-check" id="label-mode-heart" title="勾選後點擊牌組，在右上角加上愛心 mark（喜歡牌組）">
+        <label class="mode-check" id="label-mode-heart" title="勾選後點擊牌組，在右上外框邊緣加上愛心 mark（喜歡牌組）">
           <input type="checkbox" id="mode-heart" />
           <span>♥ 喜歡牌組</span>
         </label>
@@ -362,7 +363,7 @@
   </div>
 
   <div class="footer-note">
-    未勾選「擅長牌組 / 喜歡牌組」時，點擊 ICON 切換「100% 彩度（選取）/ 30% 彩度（未選取）」；勾選其中一項時，點擊 ICON 可切換左上星星（擅長）或右上愛心（喜歡）標記。
+    未勾選「擅長牌組 / 喜歡牌組」時，點擊 ICON 切換「100% 彩度（選取）/ 30% 彩度（未選取）」；勾選其中一項時，點擊 ICON 可切換左上外框星星（擅長）或右上外框愛心（喜歡）標記。
   </div>
 
   <footer class="site-disclaimer">
@@ -1018,7 +1019,7 @@
           useCORS: true
         });
 
-        const fileName = `Hifumi_TierList_已選取結果.png`;
+        const fileName = `特殊分數表.png`;
         const blob = await canvasToBlob(canvas, 'image/png');
 
         if (!blob) {
