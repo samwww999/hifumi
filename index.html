@@ -56,6 +56,52 @@
       align-items: center;
     }
 
+    /* 模式勾選方塊 */
+    .mode-checks {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .mode-check {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #1f2227;
+      border: 1.5px solid #3f444e;
+      padding: 7px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: border-color 0.15s ease, background-color 0.15s ease;
+    }
+
+    .mode-check:hover {
+      border-color: #60a5fa;
+    }
+
+    .mode-check input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: #3b82f6;
+      cursor: pointer;
+    }
+
+    .mode-check.active-star {
+      border-color: #f59e0b;
+      background: rgba(245, 158, 11, 0.14);
+      color: #fde68a;
+    }
+
+    .mode-check.active-heart {
+      border-color: #ec4899;
+      background: rgba(236, 72, 153, 0.14);
+      color: #fbcfe8;
+    }
+
     .btn {
       padding: 9px 15px;
       border: none;
@@ -166,8 +212,9 @@
       pointer-events: none;
     }
 
+    /* 未點選狀態：彩度降低為 30% */
     .icon-card:not(.active) {
-      filter: saturate(10%);
+      filter: saturate(30%);
       opacity: 0.85;
       border-color: #c5cad3;
     }
@@ -178,6 +225,7 @@
       transform: scale(1.03);
     }
 
+    /* 點選作用狀態：100% 彩度 */
     .icon-card.active {
       filter: saturate(100%);
       opacity: 1;
@@ -188,6 +236,45 @@
 
     .icon-card.active:hover {
       transform: scale(1.05);
+    }
+
+    /* 角落 Mark（左上星星：擅長牌組 / 右上愛心：喜歡牌組） */
+    .card-mark {
+      position: absolute;
+      top: 4px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      line-height: 1;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .mark-star {
+      left: 4px;
+      background: rgba(245, 158, 11, 0.95);
+      color: #fffbeb;
+      border: 1.5px solid #ffffff;
+    }
+
+    .mark-heart {
+      right: 4px;
+      background: rgba(236, 72, 153, 0.95);
+      color: #fdf2f8;
+      border: 1.5px solid #ffffff;
+    }
+
+    .icon-card.has-star .mark-star {
+      display: flex;
+    }
+
+    .icon-card.has-heart .mark-heart {
+      display: flex;
     }
 
     .empty-row-hint {
@@ -249,11 +336,23 @@
   <div class="toolbar">
     <div class="toolbar-group">
       <span class="stats">已選取：<strong id="selected-count">0</strong> / <span id="total-count">0</span></span>
+
+      <div class="mode-checks">
+        <label class="mode-check" id="label-mode-star" title="勾選後點擊牌組，在左上角加上星星 mark（擅長牌組）">
+          <input type="checkbox" id="mode-star" />
+          <span>★ 擅長牌組</span>
+        </label>
+        <label class="mode-check" id="label-mode-heart" title="勾選後點擊牌組，在右上角加上愛心 mark（喜歡牌組）">
+          <input type="checkbox" id="mode-heart" />
+          <span>♥ 喜歡牌組</span>
+        </label>
+      </div>
     </div>
 
     <div class="toolbar-group">
       <button class="btn btn-secondary" onclick="selectAll(true)">全選</button>
       <button class="btn btn-secondary" onclick="selectAll(false)">取消全選</button>
+      <button class="btn btn-secondary" onclick="clearAllMarks()">清除所有標記</button>
       <button class="btn btn-success" onclick="exportAsImage()">💾 匯出已選取圖片</button>
     </div>
   </div>
@@ -263,11 +362,11 @@
   </div>
 
   <div class="footer-note">
-    點擊 ICON 切換「全彩（已選取）/ 反白（未選取）」；按下「匯出已選取圖片」時，未點選的反白 ICON 與沒有已點選項目的列不會一起輸出。
+    未勾選「擅長牌組 / 喜歡牌組」時，點擊 ICON 切換「100% 彩度（選取）/ 30% 彩度（未選取）」；勾選其中一項時，點擊 ICON 可切換左上星星（擅長）或右上愛心（喜歡）標記。
   </div>
 
   <footer class="site-disclaimer">
-    此工具製作參考水鬼團特殊賽分數表（<a href="https://mizuoni.blogspot.com/p/union-arena-tier-list.html" target="_blank" rel="noopener noreferrer">https://mizuoni.blogspot.com/p/union-arena-tier-list.html</a>）
+    此卡表參考水鬼團特殊賽分數表製作（<a href="https://mizuoni.blogspot.com/p/union-arena-tier-list.html" target="_blank" rel="noopener noreferrer">https://mizuoni.blogspot.com/p/union-arena-tier-list.html</a>）
   </footer>
 
   <script>
@@ -297,20 +396,20 @@
         folder: '8',
         color: '#dda16f',
         files: [
-         'imgi_20_EVA-R02.jpg',
-         'imgi_7_REZ-B01.jpg',
-         'imgi_8_BLC-P05.jpg',
-         'imgi_9_EVA-Y01.jpg',
-         'imgi_10_NIK-Y03.jpg',
-         'imgi_11_STG-B02.jpg',
-         'imgi_12_MCR-B01.jpg',
-         'imgi_13_CGD-B01.jpg',
-         'imgi_14_KJN-P02.jpg',
-         'imgi_15_SLG-P02.jpg',
-         'imgi_16_EVA-P02.jpg',
-         'imgi_17_KMR-G02.jpg',
-         'imgi_18_CSM-R02.jpg',
-         'imgi_19_KGD-R02.jpg'
+          'imgi_20_EVA-R02.jpg',
+          'imgi_7_REZ-B01.jpg',
+          'imgi_8_BLC-P05.jpg',
+          'imgi_9_EVA-Y01.jpg',
+          'imgi_10_NIK-Y03.jpg',
+          'imgi_11_STG-B02.jpg',
+          'imgi_12_MCR-B01.jpg',
+          'imgi_13_CGD-B01.jpg',
+          'imgi_14_KJN-P02.jpg',
+          'imgi_15_SLG-P02.jpg',
+          'imgi_16_EVA-P02.jpg',
+          'imgi_17_KMR-G02.jpg',
+          'imgi_18_CSM-R02.jpg',
+          'imgi_19_KGD-R02.jpg'
         ]
       },
       {
@@ -732,6 +831,29 @@
     ];
 
     const tierBoard = document.getElementById('tier-board');
+    const modeStarInput = document.getElementById('mode-star');
+    const modeHeartInput = document.getElementById('mode-heart');
+    const labelModeStar = document.getElementById('label-mode-star');
+    const labelModeHeart = document.getElementById('label-mode-heart');
+
+    function syncModeUI() {
+      labelModeStar.classList.toggle('active-star', modeStarInput.checked);
+      labelModeHeart.classList.toggle('active-heart', modeHeartInput.checked);
+    }
+
+    modeStarInput.addEventListener('change', () => {
+      if (modeStarInput.checked) {
+        modeHeartInput.checked = false;
+      }
+      syncModeUI();
+    });
+
+    modeHeartInput.addEventListener('change', () => {
+      if (modeHeartInput.checked) {
+        modeStarInput.checked = false;
+      }
+      syncModeUI();
+    });
 
     function updateCounts() {
       const cards = tierBoard.querySelectorAll('.icon-card');
@@ -746,6 +868,29 @@
           hint.style.display = rowCards.length === 0 ? 'flex' : 'none';
         }
       });
+    }
+
+    function handleCardClick(card) {
+      if (modeStarInput.checked) {
+        const willAddStar = !card.classList.toggle('has-star');
+        if (!willAddStar) {
+          card.classList.add('active');
+        }
+        updateCounts();
+        return;
+      }
+
+      if (modeHeartInput.checked) {
+        const willAddHeart = !card.classList.toggle('has-heart');
+        if (!willAddHeart) {
+          card.classList.add('active');
+        }
+        updateCounts();
+        return;
+      }
+
+      card.classList.toggle('active');
+      updateCounts();
     }
 
     function initBoard() {
@@ -782,11 +927,18 @@
           img.alt = fileName;
           img.crossOrigin = 'anonymous';
 
+          const starMark = document.createElement('span');
+          starMark.className = 'card-mark mark-star';
+          starMark.textContent = '★';
+
+          const heartMark = document.createElement('span');
+          heartMark.className = 'card-mark mark-heart';
+          heartMark.textContent = '♥';
+
           card.appendChild(img);
-          card.addEventListener('click', () => {
-            card.classList.toggle('active');
-            updateCounts();
-          });
+          card.appendChild(starMark);
+          card.appendChild(heartMark);
+          card.addEventListener('click', () => handleCardClick(card));
 
           grid.appendChild(card);
         });
@@ -804,6 +956,12 @@
         card.classList.toggle('active', isActive);
       });
       updateCounts();
+    }
+
+    function clearAllMarks() {
+      tierBoard.querySelectorAll('.icon-card').forEach(card => {
+        card.classList.remove('has-star', 'has-heart');
+      });
     }
 
     function isIOSDevice() {
@@ -860,7 +1018,7 @@
           useCORS: true
         });
 
-        const fileName = `UA_TierList_特殊賽分數表.png`;
+        const fileName = `Hifumi_TierList_已選取結果.png`;
         const blob = await canvasToBlob(canvas, 'image/png');
 
         if (!blob) {
